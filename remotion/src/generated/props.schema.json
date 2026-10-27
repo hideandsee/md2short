@@ -1,0 +1,355 @@
+{
+  "$defs": {
+    "CaptionSegment": {
+      "additionalProperties": false,
+      "properties": {
+        "endFrame": {
+          "type": "integer"
+        },
+        "endMs": {
+          "type": "integer"
+        },
+        "highlightKeyword": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "index": {
+          "type": "integer"
+        },
+        "startFrame": {
+          "type": "integer"
+        },
+        "startMs": {
+          "type": "integer"
+        },
+        "text": {
+          "type": "string"
+        },
+        "wordEnd": {
+          "type": "integer"
+        },
+        "wordStart": {
+          "type": "integer"
+        },
+        "words": {
+          "items": {
+            "$ref": "#/$defs/FramedWord"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "index",
+        "text",
+        "startMs",
+        "endMs",
+        "startFrame",
+        "endFrame",
+        "wordStart",
+        "wordEnd",
+        "words",
+        "highlightKeyword"
+      ],
+      "title": "CaptionSegment",
+      "type": "object"
+    },
+    "CompanyLogoCue": {
+      "additionalProperties": false,
+      "properties": {
+        "company": {
+          "type": "string"
+        },
+        "durationFrames": {
+          "type": "integer"
+        },
+        "durationMs": {
+          "type": "integer"
+        },
+        "logoFileName": {
+          "type": "string"
+        },
+        "startFrame": {
+          "type": "integer"
+        },
+        "startMs": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "company",
+        "logoFileName",
+        "startMs",
+        "durationMs",
+        "startFrame",
+        "durationFrames"
+      ],
+      "title": "CompanyLogoCue",
+      "type": "object"
+    },
+    "EmoticonCue": {
+      "additionalProperties": false,
+      "properties": {
+        "assetKind": {
+          "default": "emoticon",
+          "enum": [
+            "emoticon",
+            "photo"
+          ],
+          "type": "string"
+        },
+        "durationFrames": {
+          "type": "integer"
+        },
+        "durationMs": {
+          "type": "integer"
+        },
+        "emoticonFileName": {
+          "type": "string"
+        },
+        "keyword": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "primaryVisualSubject": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "startFrame": {
+          "type": "integer"
+        },
+        "startMs": {
+          "type": "integer"
+        },
+        "visualKeywords": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "visualMode": {
+          "default": "emoticon",
+          "enum": [
+            "emoticon",
+            "photo"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "emoticonFileName",
+        "keyword",
+        "startMs",
+        "durationMs",
+        "startFrame",
+        "durationFrames",
+        "assetKind",
+        "visualMode",
+        "primaryVisualSubject",
+        "visualKeywords"
+      ],
+      "title": "EmoticonCue",
+      "type": "object"
+    },
+    "FramedWord": {
+      "additionalProperties": false,
+      "properties": {
+        "endFrame": {
+          "type": "integer"
+        },
+        "endMs": {
+          "type": "integer"
+        },
+        "startFrame": {
+          "type": "integer"
+        },
+        "startMs": {
+          "type": "integer"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "text",
+        "startMs",
+        "endMs",
+        "startFrame",
+        "endFrame"
+      ],
+      "title": "FramedWord",
+      "type": "object"
+    },
+    "NumberCard": {
+      "additionalProperties": false,
+      "properties": {
+        "durationFrames": {
+          "type": "integer"
+        },
+        "durationMs": {
+          "type": "integer"
+        },
+        "startFrame": {
+          "type": "integer"
+        },
+        "startMs": {
+          "type": "integer"
+        },
+        "text": {
+          "type": "string"
+        },
+        "wordEnd": {
+          "type": "integer"
+        },
+        "wordStart": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "text",
+        "wordStart",
+        "wordEnd",
+        "startMs",
+        "durationMs",
+        "startFrame",
+        "durationFrames"
+      ],
+      "title": "NumberCard",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "audioFileName": {
+      "type": "string"
+    },
+    "bgColor": {
+      "type": "string"
+    },
+    "captionSegments": {
+      "items": {
+        "$ref": "#/$defs/CaptionSegment"
+      },
+      "type": "array"
+    },
+    "chunkSize": {
+      "type": "integer"
+    },
+    "companyLogoCues": {
+      "items": {
+        "$ref": "#/$defs/CompanyLogoCue"
+      },
+      "type": "array"
+    },
+    "ctaText": {
+      "default": "구독과 알람 설정 부탁드립니다",
+      "type": "string"
+    },
+    "durationInFrames": {
+      "type": "integer"
+    },
+    "emoticonCues": {
+      "items": {
+        "$ref": "#/$defs/EmoticonCue"
+      },
+      "type": "array"
+    },
+    "fontFamily": {
+      "default": "MD2ShortSans",
+      "type": "string"
+    },
+    "headerLogo": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "highlightKeywords": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "numberCards": {
+      "items": {
+        "$ref": "#/$defs/NumberCard"
+      },
+      "type": "array"
+    },
+    "openingDurationFrames": {
+      "default": 0,
+      "type": "integer"
+    },
+    "openingDurationMs": {
+      "default": 0,
+      "type": "integer"
+    },
+    "openingText": {
+      "default": "",
+      "type": "string"
+    },
+    "outroDurationFrames": {
+      "default": 0,
+      "type": "integer"
+    },
+    "showOpening": {
+      "default": true,
+      "type": "boolean"
+    },
+    "showOutro": {
+      "default": false,
+      "type": "boolean"
+    },
+    "wordsFileName": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "audioFileName",
+    "wordsFileName",
+    "bgColor",
+    "chunkSize",
+    "captionSegments",
+    "emoticonCues",
+    "companyLogoCues",
+    "numberCards",
+    "highlightKeywords",
+    "openingText",
+    "openingDurationMs",
+    "openingDurationFrames",
+    "showOpening",
+    "ctaText",
+    "showOutro",
+    "outroDurationFrames",
+    "headerLogo",
+    "fontFamily",
+    "durationInFrames"
+  ],
+  "title": "RemotionProps",
+  "type": "object"
+}

@@ -1,0 +1,16 @@
+.env
+jobs/
+output/
+remotion/node_modules
+remotion/public/jobs/
+remotion/out/
+.venv
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+remotion/public/emoticon
+remotion/public/img
+remotion/public/company
+remotion/public/font/
+.omc/
