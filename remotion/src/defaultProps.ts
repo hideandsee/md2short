@@ -12,6 +12,7 @@ export const defaultProps: RemotionProps = {
   numberCards: [],
   highlightKeywords: [],
   openingText: "",
+  openingSubtitle: "",
   openingDurationMs: 0,
   openingDurationFrames: 0,
   showOpening: false,

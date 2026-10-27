@@ -14,8 +14,8 @@ const KenBurns: React.FC<{ cue: EmoticonCue; index: number }> = ({ cue, index })
     <Img
       src={staticFile(cue.emoticonFileName)}
       style={{
-        width: photo ? "100%" : "78%",
-        height: photo ? "100%" : "78%",
+        width: photo ? "100%" : "92%",
+        height: photo ? "100%" : "92%",
         objectFit: photo ? "cover" : "contain",
         transform: `scale(${scale})`,
       }}

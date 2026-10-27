@@ -21,11 +21,18 @@ export const TechExplainer: React.FC<RemotionProps> = (props) => (
     <VisualLayer cues={props.emoticonCues} />
     <CompanyLogos cues={props.companyLogoCues} />
     <NumberCards cards={props.numberCards} />
-    <BrandHeader headerLogo={props.headerLogo} />
+    <BrandHeader
+      headerLogo={props.headerLogo}
+      hideWordmarkUntilFrame={props.showOpening ? props.openingDurationFrames : 0}
+    />
     <BottomBar />
     <Captions segments={props.captionSegments} />
     {props.showOpening ? (
-      <OpeningBriefing text={props.openingText} durationFrames={props.openingDurationFrames} />
+      <OpeningBriefing
+        text={props.openingText}
+        subtitle={props.openingSubtitle}
+        durationFrames={props.openingDurationFrames}
+      />
     ) : null}
     {props.showOutro ? <Outro ctaText={props.ctaText} durationFrames={props.outroDurationFrames} /> : null}
   </AbsoluteFill>

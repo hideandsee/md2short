@@ -68,9 +68,9 @@ def test_direction_drives_cue_selection():
     words = _scribe_words(SCRIBE_TEXT)
     segments = segments_from_ranges(words, map_cuts_to_segments(words, cuts))
     hints = {i: c.direction for i, c in enumerate(cuts)}
-    with_hints = plan_cues(segments, words, audio_duration_ms=20_000, emoticon_dir=ROOT / "emoticon", hints=hints)
+    with_hints = plan_cues(segments, audio_duration_ms=20_000, emoticon_dir=ROOT / "emoticon", hints=hints)
     assert with_hints[2].emoticon_file_name == "emoticon/28_폭락_패닉하락.png"
-    without = plan_cues(segments, words, audio_duration_ms=20_000, emoticon_dir=ROOT / "emoticon")
+    without = plan_cues(segments, audio_duration_ms=20_000, emoticon_dir=ROOT / "emoticon")
     assert without[2].emoticon_file_name != "emoticon/28_폭락_패닉하락.png"
 
 
@@ -105,9 +105,15 @@ def test_pipeline_storyboard_branch(mock_apis, runtime, storyboard_md, tmp_path)
     assert len(json.loads((job / "inputs/storyboard.json").read_text())) == 4
     mapped = json.loads((job / "edit/storyboard_segments.json").read_text())
     captions = json.loads((job / "edit/caption_segments.json").read_text())
-    assert len(mapped) == len(captions) == 4
+    assert len(mapped) == 4 and len(captions) >= 4
     assert mapped[0]["wordStart"] == 3  # 오프닝 단어 뒤부터
+    # 자막 조각은 컷 경계를 넘지 않고, 컷 3 조각들은 모두 `화면 연출`(폭락)에 맞는 이미지를 받는다
+    cut_bounds = {m["wordStart"] for m in mapped} | {m["wordEnd"] for m in mapped}
+    assert all(any(c["wordStart"] == b for c in captions) for b in cut_bounds - {mapped[-1]["wordEnd"]})
+    assert all(len(c["text"]) <= 26 for c in captions)
     cues = json.loads((job / "edit/emoticon_cues.json").read_text())
-    assert cues[2]["emoticonFileName"] == "emoticon/28_폭락_패닉하락.png"
+    cut3 = mapped[2]
+    cut3_cues = [cue for cue, cap in zip(cues, captions, strict=True) if cut3["wordStart"] <= cap["wordStart"] < cut3["wordEnd"]]
+    assert cut3_cues and all(c["emoticonFileName"] == "emoticon/28_폭락_패닉하락.png" for c in cut3_cues)
     tts_input = (job / "logs/tts_input.txt").read_text()
     assert "화면 연출" not in tts_input and "oil barrels" not in tts_input

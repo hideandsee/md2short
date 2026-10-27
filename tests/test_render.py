@@ -113,7 +113,7 @@ def test_render_fixture_without_brand_assets(tmp_path):
         (job_dir / sub).mkdir(parents=True)
 
     segments = build_caption_segments(words_doc.words, chunk_size=14)
-    cues = plan_cues(segments, words_doc.words, audio_duration_ms=words_doc.audio_duration_ms,
+    cues = plan_cues(segments, audio_duration_ms=words_doc.audio_duration_ms,
                      emoticon_dir=project / "emoticon")
     edl = build_edl(job_id=job_id, words_doc=words_doc, caption_segments=segments, emoticon_cues=cues)
     props = build_props(edl, JobConfig(show_opening=False), staging_prefix=f"jobs/{job_id}", opening_text="",
@@ -134,3 +134,10 @@ def test_render_fixture_without_brand_assets(tmp_path):
         assert not (ROOT / "remotion" / "public" / "img").exists()
     finally:
         render.cleanup_staging(ROOT / "remotion", job_id)
+
+
+def test_opening_box_visible_on_first_frame():
+    """썸네일(0번 프레임)이 빈 화면이 되지 않도록 오프닝 박스 scale은 0에서 시작하지 않는다."""
+    src = (REMOTION_SRC / "OpeningBriefing.tsx").read_text()
+    assert "scale(${pop})" not in src
+    assert re.search(r"scale\(\$\{0\.\d+ \+ ", src)

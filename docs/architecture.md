@@ -135,18 +135,18 @@
 | --- | --- |
 | `Root.tsx` | 1080×1920, 30fps, default props, `calculateMetadata`로 duration override |
 | `TechExplainer.tsx` | 전체 합성 루트: Background + Audio + VisualLayer + NumberCards + Header + BottomBar + Captions + OpeningBriefing/Outro. `showOpening` props 로 opening visual/caption suppression 계약을 동기화하고, `showOutro`는 기본 비활성화 |
-| `BrandHeader.tsx` | 상단 470px 검은 띠 = safe margin 250px + logo 220px. props `headerLogo`가 `null`이면(`img/header_logo.png` 없음) 텍스트 워드마크 "데이브리핑"으로 대체 |
+| `BrandHeader.tsx` | 상단 400px 검은 띠 = safe margin 250px + logo 150px. props `headerLogo`가 `null`이면(`img/header_logo.png` 없음) 텍스트 워드마크 "데이브리핑"으로 대체하고, 오프닝 박스가 보이는 동안(`openingDurationFrames`)에는 워드마크를 숨겨 중복을 피함 |
 | `Fonts.tsx` | `@remotion/fonts` `loadFont`(내부 `delayRender`)로 `public/font/{regular,bold}{,-latin}.woff2`를 로드해 폰트 로드 전 프레임을 찍지 않음 |
 | `CompanyLogos.tsx` | `companyLogoCues` 표시 |
 | `generated/props.ts` | Python `RemotionProps`에서 생성된 타입(수정 금지, `scripts/gen_types.sh`로 재생성) |
-| `BottomBar.tsx` | 하단 460px 검은 자막 띠 |
+| `BottomBar.tsx` | 하단 420px 검은 자막 띠 |
 | `Captions.tsx` | **순수 렌더러**: Python `caption_plan.py`가 만든 `captionSegments`(필수 prop)를 프레임 값 그대로 표시. 최대 2줄, 장문 폰트 축소, 활성 단어 pop scale, segment당 1개 노란 `highlightKeyword` 강조. 분할·시간 계산 로직 없음 |
 | `VisualLayer.tsx` | cue별 `<Sequence>`, 완만한 Ken Burns zoom in/out. emoticon 모드(`emoticon/*.png`)는 정사각 contain, photo 모드(`jobs/<id>/photos/seg_NN_<hash>.png`)는 safe content rectangle cover/crop |
 | `Emoticons.tsx` | legacy emoticon renderer 파일. 신규 합성 루트는 `VisualLayer.tsx` 사용 |
-| `NumberCard.tsx` | 숫자 sticker card 1.8s pop-in + tilt |
-| `OpeningBriefing.tsx` | `showOpening`이 true일 때 "X월 X일 데이브리핑입니다" 큰 가운데 박스 표시 |
+| `NumberCard.tsx` | 숫자 sticker card 1.8s pop-in + tilt. 라벨(지표명) + ▲빨강/▼파랑 방향 표시. 이미지 상단 문구를 가리지 않게 콘텐츠 영역 하단 오른쪽에 배치 |
+| `OpeningBriefing.tsx` | `showOpening`이 true일 때 날짜 박스 + 아래 hook 한 줄(`openingSubtitle`) 표시. 첫 프레임(썸네일)부터 보이도록 85% 크기에서 시작 |
 | `Outro.tsx` | `showOutro`가 true일 때만 마지막 2.6s full-screen 구독 CTA overlay 표시. 기본값은 false |
-| `layout.ts` | 화면 레이아웃 상수(헤더 470px, 하단 460px 등) |
+| `layout.ts` | 화면 레이아웃 상수(헤더 400px, 하단 420px, 콘텐츠 1100px, 상승/하락 색) |
 
 Remotion assets는 `render_remotion()`이 다음을 보장함.
 
@@ -287,6 +287,7 @@ class JobConfig(BaseModel):
   "numberCards": [],
   "highlightKeywords": [],
   "openingText": "26년 5월 2일\n데이브리핑",
+  "openingSubtitle": "S&P 500 ▲1.2% · 반도체 ▲3.5%",
   "openingDurationMs": 2800,
   "showOpening": true,
   "ctaText": "<CTA_TEXT[language]>",
@@ -386,6 +387,7 @@ remotion/public/jobs/<job_id>/      # 렌더용 임시 staging: qc_passed 후 �
 ### 5.4 [F-05] 자막·cue plan 생성
 
 - 자막 분할은 Python `caption_plan.build_caption_segments()`만 함(AGENTS.md §3.1: Remotion은 편집 판단 금지). 단어 끝 구두점(`.!?。！？…`) 또는 단어 간 gap≥600ms 가 boundary, `--chunk-size`(default 14, max 24)는 한 문장이 비정상적으로 길 때의 단어 수 상한. 다음 자막이 600ms 안에 이어지면 그 시작까지 표시를 유지함. 오프닝 구간 단어는 제외.
+- 한 문장이 `MAX_CAPTION_CHARS`(26자, 2줄 분량)를 넘으면 쉼표 경계를 우선해 글자 수가 고르게 다시 나눔. 숫자와 단위(`1조 2천억 / 원`)나 `numeric_display`가 합친 표기(`S&P 500`)는 가르지 않음. 스토리보드는 컷 경계 안에서만 나눔. Remotion의 2줄 clamp는 안전망일 뿐 내용이 잘리지 않아야 함.
 - `Captions.tsx`는 `captionSegments`를 프레임 값 그대로 표시만 함(최대 2줄, 길면 폰트 축소).
 - 자막 burn-in/overlay는 Remotion 단독 책임이다. ffmpeg caption PNG/overlay 렌더 경로는 CLI/schema/pipeline/render에서 지원하지 않는다.
 - `emoticon_map.plan_cues()`가 자막 segment마다 keyword/fallback 기반 호랑이 cue를 생성하고(visual_mode=emoticon), segment의 `highlightKeyword`를 고름. 키워드 사전은 `emoticon/NN_키워드_설명.png` 파일명에서 만듦(§5.8).
@@ -451,18 +453,24 @@ npx remotion render src/index.ts TechExplainer <output_path> \
 ### 5.8 [F-09] 호랑이 캐릭터 자동 cue (visual_mode=emoticon, default)
 
 - **모듈**: `md2short.emoticon_map`, Remotion `VisualLayer.tsx` (`Emoticons.tsx`는 legacy renderer)
-- 키워드 사전: `emoticon/NN_키워드_설명.png` 파일명에서 자동 생성(`build_keyword_index`). 파일명 조각은 exact keyword(가중치 2), 조각 안의 다른 파일 키워드·`DOMAIN_TERMS`와 나머지는 sub keyword(가중치 1). 현재 asset 60종.
-- 선택 순서: 가중치 합 → 가장 긴 매칭 키워드 → 낮은 NN (예: `폭락` → `28_폭락_패닉하락.png`).
+- 키워드 사전: `emoticon/NN_키워드_설명.png` 파일명에서 자동 생성(`build_keyword_index`). 파일명 조각은 exact keyword(가중치 2), 조각 안의 다른 파일 조각·`DOMAIN_TERMS`는 sub keyword(가중치 1), 방향 어휘(상승·하락…)는 0.5. 어휘에 없는 나머지 조각(`검색강세`의 `강세`)은 쓰지 않음. 현재 asset 60종.
+- 호랑이 그림에는 "급등", "계약 승인" 같은 문구가 그려져 있으므로, 이미지는 **문장 단위**로 고르고 다음을 모두 통과해야 함:
+  - 방향: 이미지의 상승/하락이 문장 방향과 같을 것. 방향이 없는 문장에는 방향 있는 이미지를 쓰지 않음
+  - 주장: 이미지의 사건 어휘(`CLAIM_TERMS`: 급등·계약·동결·매도…)가 문장에 있을 것
+  - 주제: 이미지의 구체 주제(반도체·유가·금리…, 증시·주가·지수 제외)가 문장에 있을 것
+- 점수: 키워드 가중치 + 방향 일치 1.5 + 문장에 나온 사건 어휘당 1 − 최근 3문장 재사용 1.5. 동점이면 가장 긴 키워드 → 낮은 NN (예: `폭락` → `28_폭락_패닉하락.png`).
+- 통과 후보가 없으면 방향별 범용 이미지(`09_가즈아_상승`/`04_나도울고싶어_하락` 등) → 숫자 문장은 `05_분석중_차트` → 중립 이미지 순.
 - planner 규칙:
   - `fill_gaps=True` 기본 경로: words.json을 문장형 visual span으로 나눠 span마다 cue 1개 생성
   - span 전체 텍스트에서 가장 구체적인 keyword match를 scoring해 선택
   - keyword가 없으면 fallback category → neutral default 순으로 deterministic image 선택
   - `fill_gaps=True`는 기본 cue 수 제한 없음 — 긴 영상도 words.json segment 끝까지 이미지/자막 boundary 생성
-  - boundary-crossing keyword lookahead 2 words: 다음 단어들만으로 매칭되는 키워드는 다음 segment 몫이라 제외(다음 문장 이미지를 미리 당겨오지 않음)
-  - 공백 제거한 자막도 함께 매칭(Scribe가 `폭 락`처럼 쪼갠 경우)
+  - 문장 단위로 고르므로 한 문장의 자막 조각들은 같은 이미지를 공유하고, cue마다 Ken Burns 방향이 바뀌어 2–3초 단위로 움직임이 생김
+  - 공백 제거한 문장도 함께 매칭(Scribe가 `폭 락`처럼 쪼갠 경우)
   - 스토리보드 입력이면 컷의 `화면 연출`을 매칭 텍스트에 포함
+  - 자막 강조 단어(`highlightKeyword`): 단위 붙은 수치 → 방향 동사 → 이미지 키워드 → 그 밖의 숫자 순
   - `fill_gaps=False` sparse 경로에서는 기존 cooldown/gap/duration 규칙과 기본 max cues 24 유지
-- Remotion은 safe content 영역(상단 470px, 하단 460px 제외)에 중앙 정렬하고 완만한 Ken Burns zoom을 적용함.
+- Remotion은 safe content 영역(상단 400px, 하단 420px 제외)에 92% 크기로 중앙 정렬하고 완만한 Ken Burns zoom을 적용함.
 - 비용 0, deterministic — 같은 입력 같은 출력.
 
 ### 5.9 [F-10] 숫자 모션 그래픽
@@ -476,12 +484,16 @@ npx remotion render src/index.ts TechExplainer <output_path> \
 - 지수 패턴은 지수명 뒤 12자 안의 `숫자+포인트/p`만 카드로 만듦(퍼센트·금액은 각자 패턴).
 - 시점: 표시용 단어 목록(`numeric_display` 적용, `words.json`과 1:1)에서 그 숫자가 처음 발화된 단어부터 가장 짧은 단어 구간(최대 4단어)에 고정. Scribe가 `3.5퍼센트`를 여러 단어로 쪼개도 구간 매칭으로 잡음.
 - 일치하는 단어가 없으면 카드를 만들지 않고 `edit/number_cards.json`의 `dropped`에 사유를 남김. 비례 매핑 같은 시간 추정은 하지 않음(AGENTS.md §3.2).
-- 기본 max 6개, cooldown 2.5초(직전 카드 시작 기준), duration 1.8초(오디오 끝에서 잘림).
+- **문장마다 대표 수치 1개**만 카드로 만듦: 뒤 3단어 안에 급등·폭락 같은 강한 방향 어휘가 있으면 +2, 방향 어휘 +1, 퍼센트·지수 +1, 금액·포인트 +0.5. 나머지는 `dropped`(`not_sentence_representative`).
+- 라벨: 같은 문장 앞쪽 10단어 안의 지표명(S&P 500·나스닥·코스피·반도체·국채 금리…, 연속 지표어는 붙임) → 없으면 주어(`엔비디아는` → 엔비디아). 방향: 카드 단어부터 뒤 3단어의 상승/하락 어휘.
+- 상한은 영상 길이 비례(7초당 1개, 최소 2개). 넘치면 점수 낮은 카드부터 뺌. cooldown 2.5초(직전 카드 시작 기준), duration 1.8초(오디오 끝에서 잘림).
 
 ### 5.10 [F-11] Opening / Outro CTA 계약 동기화
 
 - `JobConfig.show_opening`은 script generation, Remotion props, caption suppression, `OpeningBriefing` 호출을 함께 제어함. `show_outro`는 마지막 `Outro` overlay 표시 여부만 제어함.
-- `show_opening=True`이면 spoken opening 문구를 TTS 대본 앞에 붙이고, `openingText`에는 2줄 opening visual 문구(`26년 M월 D일\n데이브리핑`)를 전달함. 실제 `words.json` 매칭으로 계산한 `openingDurationMs` 동안 opening visual을 표시하며, 하단 자막은 해당 구간의 단어를 caption 대상에서 제외함.
+- `show_opening=True`이면 spoken opening 문구를 TTS 대본 앞에 붙이고, `openingText`에는 2줄 opening visual 문구(`26년 M월 D일\n데이브리핑`)를 전달함. 날짜는 원문 front matter `date:` 또는 앞 8줄의 날짜(YYYY-MM-DD, YYYY.MM.DD, YYYY년 M월 D일)를 우선하고, 없으면 실행일(`status.json`의 `briefing_date`에 기록).
+- `openingDurationMs`는 `words.json`에서 `데이브리핑` 단어 다음 단어의 시작까지(첫 자막과 사이 빈 화면 없음). 하단 자막은 해당 구간의 단어를 caption 대상에서 제외함.
+- `openingSubtitle`: 오프닝 박스 아래 hook 한 줄. 앞쪽 숫자 카드 2개를 `라벨 ▲수치 · 라벨 ▼수치`로 요약하고, 카드가 없으면 OpenAI 대본의 `hook`.
 - `show_opening=False`이면 opening 문구를 대본에 붙이지 않고 Remotion caption suppression도 0ms 로 전달함.
 - `show_outro=False`가 기본값이므로 마지막 2.6s full-screen `🐯 구독 + 알람` overlay는 표시하지 않음. `show_outro=True`를 명시적으로 전달한 경우에만 `Outro` overlay가 표시됨.
 

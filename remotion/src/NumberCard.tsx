@@ -1,30 +1,38 @@
 import { AbsoluteFill, Sequence, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import type { NumberCard as NumberCardCue } from "./generated/props";
-import { CONTENT_TOP, FONT_FAMILY } from "./layout";
+import { CONTENT_HEIGHT, CONTENT_TOP, DOWN_COLOR, FONT_FAMILY, UP_COLOR } from "./layout";
 
-const Card: React.FC<{ text: string; index: number }> = ({ text, index }) => {
+// 이미지 상단에 그려진 문구를 가리지 않도록 콘텐츠 영역 하단(자막 띠 바로 위)에 띄운다.
+const Card: React.FC<{ card: NumberCardCue; index: number }> = ({ card, index }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const pop = spring({ frame, fps, config: { damping: 12 } });
-  const tilt = index % 2 === 0 ? -4 : 4;
+  const tilt = index % 2 === 0 ? -3 : 3;
+  const color = card.direction === "up" ? UP_COLOR : card.direction === "down" ? DOWN_COLOR : "#111";
+  const arrow = card.direction === "up" ? "▲" : card.direction === "down" ? "▼" : "";
   return (
     <div
       style={{
         position: "absolute",
-        top: CONTENT_TOP + 60,
-        right: 60,
-        padding: "24px 44px",
+        top: CONTENT_TOP + CONTENT_HEIGHT - 300,
+        right: 48,
+        padding: "18px 40px 22px",
         borderRadius: 28,
         backgroundColor: "#FFD400",
         color: "#111",
         fontFamily: FONT_FAMILY,
         fontWeight: 700,
-        fontSize: 92,
+        textAlign: "center",
         boxShadow: "0 12px 30px rgba(0,0,0,0.25)",
         transform: `scale(${pop}) rotate(${tilt * pop}deg)`,
+        transformOrigin: "bottom right",
       }}
     >
-      {text}
+      {card.label ? <div style={{ fontSize: 44, lineHeight: 1.1 }}>{card.label}</div> : null}
+      <div style={{ fontSize: 96, lineHeight: 1.1, color }}>
+        {arrow ? <span style={{ fontSize: 64, marginRight: 8 }}>{arrow}</span> : null}
+        {card.text}
+      </div>
     </div>
   );
 };
@@ -33,7 +41,7 @@ export const NumberCards: React.FC<{ cards: NumberCardCue[] }> = ({ cards }) => 
   <AbsoluteFill>
     {cards.map((card, i) => (
       <Sequence key={i} from={card.startFrame} durationInFrames={card.durationFrames} layout="none">
-        <Card text={card.text} index={i} />
+        <Card card={card} index={i} />
       </Sequence>
     ))}
   </AbsoluteFill>

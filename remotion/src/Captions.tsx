@@ -4,11 +4,11 @@ import { BOTTOM_BAR_HEIGHT, FONT_FAMILY, HIGHLIGHT_COLOR } from "./layout";
 
 // 순수 렌더러: 자막 분할·시간 계산은 Python caption_plan.py 몫이다.
 // 여기서는 props의 프레임 값으로 현재 segment를 고르고 그리기만 한다.
+// Python caption_plan이 segment를 26자(2줄) 이하로 자르므로 최소 68px을 유지한다.
 const fontSizeFor = (chars: number): number => {
-  if (chars <= 18) return 72;
-  if (chars <= 30) return 62;
-  if (chars <= 44) return 54;
-  return 46;
+  if (chars <= 12) return 84;
+  if (chars <= 18) return 76;
+  return 68;
 };
 
 export const Captions: React.FC<{ segments: CaptionSegment[] }> = ({ segments }) => {
@@ -53,8 +53,9 @@ export const Captions: React.FC<{ segments: CaptionSegment[] }> = ({ segments })
               key={i}
               style={{
                 display: "inline-block",
-                marginRight: "0.28em",
-                transform: `scale(${1 + 0.08 * pop})`,
+                marginRight: "0.35em",
+                // 긴 단어가 커지며 옆 단어와 붙지 않도록 확대는 4%로 제한(간격 0.35em > 확대폭)
+                transform: `scale(${1 + 0.04 * pop})`,
                 color: highlighted ? HIGHLIGHT_COLOR : "#fff",
               }}
             >

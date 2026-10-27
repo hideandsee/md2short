@@ -166,7 +166,7 @@ def test_caption_boundaries_punctuation_gap_and_chunk_cap():
 def test_opening_window_found_from_words():
     words = normalize_scribe(scribe_payload(SCRIBE_TOKENS), audio_duration_ms=AUDIO_MS).words
     window = find_opening_window(words)
-    assert window.word_count == 3 and window.end_ms == 1400
+    assert window.word_count == 3 and window.end_ms == 1500  # 다음 단어 시작까지 유지
     assert find_opening_window(words[3:]).word_count == 0
 
 
@@ -232,7 +232,8 @@ def test_run_job_happy_path_statuses_and_artifacts(mock_apis, runtime, sample_md
     assert all(s["startMs"] in word_starts for s in segs)
     assert segs[0]["wordStart"] == 3  # opening words suppressed
     props = json.loads((result.job_dir / "edit/props.json").read_text())
-    assert props["openingDurationMs"] == 1400
+    assert props["openingDurationMs"] == 1500
+    assert props["openingDurationFrames"] == props["captionSegments"][0]["startFrame"]  # 오프닝↔첫 자막 사이 빈 화면 없음
     assert props["openingText"] == "26년 10월 26일\n데이브리핑"
     assert props["durationInFrames"] == 168
     assert props["headerLogo"] is None

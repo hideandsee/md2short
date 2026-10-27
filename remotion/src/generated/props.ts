@@ -15,6 +15,7 @@ export interface RemotionProps {
   numberCards: NumberCard[];
   openingDurationFrames: number;
   openingDurationMs: number;
+  openingSubtitle: string;
   openingText: string;
   outroDurationFrames: number;
   showOpening: boolean;
@@ -61,8 +62,10 @@ export interface EmoticonCue {
   visualMode: "emoticon" | "photo";
 }
 export interface NumberCard {
+  direction: ("up" | "down") | null;
   durationFrames: number;
   durationMs: number;
+  label: string | null;
   startFrame: number;
   startMs: number;
   text: string;

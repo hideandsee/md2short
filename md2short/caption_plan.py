@@ -2,15 +2,23 @@
 
 boundary: 단어 끝 구두점(`.!?。！？…`) 또는 다음 단어까지 gap ≥ 600ms,
 또는 `chunk_size` 단어 상한. 오프닝 구간 단어는 자막에서 제외한다.
+문장이 `MAX_CAPTION_CHARS`(2줄 분량)를 넘으면 쉼표를 우선해 글자 수가 고르게 나뉘도록 다시 쪼갠다
+(Remotion의 2줄 clamp에 걸려 내용이 잘리지 않게).
 """
 
 from __future__ import annotations
+
+import re
 
 from md2short.schema import CaptionSegment, FramedWord, Word
 from md2short.timeutil import ms_to_frames
 
 SENTENCE_PUNCT = tuple(".!?。！？…")
 GAP_BOUNDARY_MS = 600
+MAX_CAPTION_CHARS = 26
+_SOFT_BREAK = (",", "，", "、")
+_NUMBER_TAIL_RE = re.compile(r"\d[\d,.]*(?:조|억|천억|만|천)?$")
+_UNIT_HEAD_RE = re.compile(r"^(?:\d|원|달러|억|조|만|천|%|포인트|퍼센트)")
 
 
 def framed(word: Word) -> FramedWord:
@@ -21,6 +29,33 @@ def framed(word: Word) -> FramedWord:
         start_frame=ms_to_frames(word.start),
         end_frame=ms_to_frames(word.end),
     )
+
+
+def _chars(words: list[Word], a: int, b: int) -> int:
+    return len(" ".join(w.text for w in words[a:b] if w.text))
+
+
+def split_long_range(words: list[Word], a: int, b: int, max_chars: int = MAX_CAPTION_CHARS) -> list[tuple[int, int]]:
+    """[a, b)가 max_chars를 넘으면 글자 수가 고른 조각으로 나눈다. 쉼표 뒤 경계를 우선한다."""
+    total = _chars(words, a, b)
+    if total <= max_chars or b - a < 2:
+        return [(a, b)]
+    parts = -(-total // max_chars)
+    target = total / parts
+    best_cut, best_cost = None, None
+    for cut in range(a + 1, b):
+        left = _chars(words, a, cut)
+        if left > max_chars and best_cut is not None:
+            break
+        cost = abs(left - target) - (target * 0.35 if words[cut - 1].text.endswith(_SOFT_BREAK) else 0)
+        if not words[cut - 1].text:  # 비운 단어 뒤에서 끊으면 원문 표기(S&P 500 등)가 갈라짐
+            cost += total
+        if _NUMBER_TAIL_RE.search(words[cut - 1].text) and _UNIT_HEAD_RE.match(words[cut].text):
+            cost += total  # ‘1조 2천억 / 원’처럼 숫자와 단위를 가르지 않음
+        if best_cost is None or cost < best_cost:
+            best_cut, best_cost = cut, cost
+    assert best_cut is not None
+    return [(a, best_cut), *split_long_range(words, best_cut, b, max_chars)]
 
 
 def split_word_ranges(
@@ -40,7 +75,7 @@ def split_word_ranges(
             or nxt in forced_breaks
         )
         if boundary:
-            ranges.append((start, nxt))
+            ranges.extend(split_long_range(words, start, nxt))
             start = nxt
     return ranges
 

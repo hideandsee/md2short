@@ -49,6 +49,7 @@ def build_props(
     staging_prefix: str,
     opening_text: str,
     cta_text: str,
+    opening_subtitle: str = "",
     header_logo: str | None,
 ) -> RemotionProps:
     return RemotionProps(
@@ -62,6 +63,7 @@ def build_props(
         number_cards=edl.number_cards,
         highlight_keywords=edl.highlight_keywords,
         opening_text=opening_text if cfg.show_opening else "",
+        opening_subtitle=opening_subtitle if cfg.show_opening else "",
         opening_duration_ms=edl.opening_duration_ms if cfg.show_opening else 0,
         opening_duration_frames=edl.opening_duration_frames if cfg.show_opening else 0,
         show_opening=cfg.show_opening,

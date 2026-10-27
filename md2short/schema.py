@@ -107,6 +107,8 @@ class EmoticonCue(_Camel):
 
 class NumberCard(_Camel):
     text: str
+    label: str | None = None  # 지표명(S&P 500, 반도체, 국채 금리…)
+    direction: Literal["up", "down"] | None = None
     word_start: int
     word_end: int  # exclusive
     start_ms: int
@@ -150,6 +152,7 @@ class RemotionProps(_Camel):
     number_cards: list[NumberCard] = Field(default_factory=list)
     highlight_keywords: list[str] = Field(default_factory=list)
     opening_text: str = ""
+    opening_subtitle: str = ""  # 오프닝 박스 아래 hook 한 줄(숫자 카드 요약)
     opening_duration_ms: int = 0
     opening_duration_frames: int = 0
     show_opening: bool = True

@@ -14,14 +14,20 @@ import httpx
 
 from md2short import render, state
 from md2short._retry import ExternalAPIError
-from md2short.caption_plan import build_caption_segments, segments_from_ranges
+from md2short.caption_plan import build_caption_segments, segments_from_ranges, split_long_range
 from md2short.company_logo import plan_company_logo_cues
 from md2short.data_extract import plan_number_cards
 from md2short.edl import build_edl, build_props
 from md2short.emoticon_map import plan_cues
 from md2short.jobs import create_job_dir, new_job_id
 from md2short.numeric_display import apply_numeric_display_overrides
-from md2short.opening import find_opening_window, opening_visual_text, spoken_opening
+from md2short.opening import (
+    extract_briefing_date,
+    find_opening_window,
+    opening_subtitle,
+    opening_visual_text,
+    spoken_opening,
+)
 from md2short.photo_engine import PhotoEngineError, plan_photo_cues
 from md2short.qc import estimate_cost, run_qc
 from md2short.schema import CTA_TEXT, JobConfig, WordsDoc
@@ -192,7 +198,9 @@ def _run_stages(
     output_path: Path | None,
 ) -> JobResult:
     # [1] script
-    opening = spoken_opening(today) if cfg.show_opening else ""
+    # 오프닝 날짜: 원문에 적힌 브리핑 날짜 우선, 없으면 실행일
+    briefing_date = extract_briefing_date(markdown) or today
+    opening = spoken_opening(briefing_date) if cfg.show_opening else ""
     cuts: list[Cut] = parse_storyboard(markdown) if is_storyboard(markdown) else []
     if cuts:
         # 스토리보드: OpenAI 대본 생성을 우회하고 `자막`만 이어 내레이션으로 쓴다.
@@ -216,7 +224,9 @@ def _run_stages(
         raise ValueError("script is empty: markdown has no narratable text")
     (inputs / "script.md").write_text(script.full_text + "\n", encoding="utf-8")
     _write_json(inputs / "script.json", script.to_json())
-    state.write_status(job_dir, "script_generated", script_chars=len(script.full_text))
+    state.write_status(
+        job_dir, "script_generated", script_chars=len(script.full_text), briefing_date=briefing_date.isoformat()
+    )
     rt.on_stage("script_generated", script.plan)
 
     # [2] TTS
@@ -247,26 +257,31 @@ def _run_stages(
     window = find_opening_window(display_words) if cfg.show_opening else None
     skip = window.word_count if window else 0
     hints: dict[int, str] = {}
+    image_prompts: dict[int, str] = {}
     if cuts:
         ranges = map_cuts_to_segments(display_words, cuts, skip_words=skip)
-        segments = segments_from_ranges(display_words, ranges)
-        hints = {i: cut.direction for i, cut in enumerate(cuts)}
+        cut_segments = segments_from_ranges(display_words, ranges)
         _write_json(
             edit / "storyboard_segments.json",
             [
                 {"cut": cut.number, "caption": cut.caption, "text": seg.text, "wordStart": seg.word_start,
                  "wordEnd": seg.word_end, "startMs": seg.start_ms, "endMs": seg.end_ms}
-                for cut, seg in zip(cuts, segments, strict=True)
+                for cut, seg in zip(cuts, cut_segments, strict=True)
             ],
         )
+        # 자막은 컷 경계를 지키면서 2줄(26자) 단위로 다시 나눈다. 각 조각은 자기 컷의 `화면 연출`을 hint로 받는다.
+        sub_ranges = [(n, r) for n, (a, b) in enumerate(ranges) for r in split_long_range(display_words, a, b)]
+        segments = segments_from_ranges(display_words, [r for _, r in sub_ranges])
+        hints = {i: cuts[n].direction for i, (n, _) in enumerate(sub_ranges)}
+        image_prompts = {i: cuts[n].image_prompt for i, (n, _) in enumerate(sub_ranges)}
     else:
         segments = build_caption_segments(display_words, chunk_size=cfg.chunk_size, skip_words=skip)
-    cues = plan_cues(segments, display_words, audio_duration_ms=audio_ms, emoticon_dir=rt.emoticon_dir, hints=hints)
+    cues = plan_cues(segments, audio_duration_ms=audio_ms, emoticon_dir=rt.emoticon_dir, hints=hints)
     if cfg.visual_mode == "photo":
         cues = _photo_or_fallback(
             segments, cues, cfg, rt, client, job_id, job_dir, edit, logs,
             openai_api_key=openai_api_key,
-            image_prompts={i: cut.image_prompt for i, cut in enumerate(cuts)},
+            image_prompts=image_prompts,
         )
     else:
         _dump_models(edit / "emoticon_cues.json", cues)
@@ -300,7 +315,8 @@ def _run_stages(
         edl,
         cfg,
         staging_prefix=f"jobs/{job_id}",
-        opening_text=opening_visual_text(today),
+        opening_text=opening_visual_text(briefing_date),
+        opening_subtitle=opening_subtitle(number_cards, script.hook),
         cta_text=CTA_TEXT[cfg.language],
         header_logo=render.header_logo_path(rt.project_root),
     )

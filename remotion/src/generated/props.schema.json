@@ -203,11 +203,37 @@
     "NumberCard": {
       "additionalProperties": false,
       "properties": {
+        "direction": {
+          "anyOf": [
+            {
+              "enum": [
+                "up",
+                "down"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "durationFrames": {
           "type": "integer"
         },
         "durationMs": {
           "type": "integer"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "startFrame": {
           "type": "integer"
@@ -227,6 +253,8 @@
       },
       "required": [
         "text",
+        "label",
+        "direction",
         "wordStart",
         "wordEnd",
         "startMs",
@@ -309,6 +337,10 @@
       "default": 0,
       "type": "integer"
     },
+    "openingSubtitle": {
+      "default": "",
+      "type": "string"
+    },
     "openingText": {
       "default": "",
       "type": "string"
@@ -340,6 +372,7 @@
     "numberCards",
     "highlightKeywords",
     "openingText",
+    "openingSubtitle",
     "openingDurationMs",
     "openingDurationFrames",
     "showOpening",
