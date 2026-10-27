@@ -1,7 +1,7 @@
 import { AbsoluteFill, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import { CONTENT_HEIGHT, CONTENT_TOP, FONT_FAMILY } from "./layout";
 
-// showOpening일 때 [0, openingDurationFrames) 구간에 "YY년 M월 D일\n데이브리핑" 박스 + 아래 hook 한 줄.
+// showOpening일 때 [0, openingDurationFrames) 구간에 "YY년 M월 D일\n타이거살구브리핑" 박스 + 아래 hook 한 줄.
 export const OpeningBriefing: React.FC<{ text: string; subtitle: string; durationFrames: number }> = ({
   text,
   subtitle,

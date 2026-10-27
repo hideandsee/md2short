@@ -11,7 +11,7 @@ from datetime import date
 
 from md2short.schema import NumberCard, Word
 
-OPENING_ANCHOR = "데이브리핑"
+OPENING_ANCHOR = "타이거살구브리핑"
 _MAX_OPENING_WORDS = 8
 _NON_HANGUL_RE = re.compile(r"[^가-힣]")
 
@@ -31,7 +31,7 @@ class OpeningWindow:
 
 
 def find_opening_window(words: list[Word]) -> OpeningWindow:
-    """앞쪽 단어 중 `데이브리핑`이 나오는 단어까지를 오프닝 구간으로 보고, 다음 단어 시작까지 화면을 유지한다. 없으면 0."""
+    """앞쪽 단어 중 `타이거살구브리핑`이 나오는 단어까지를 오프닝 구간으로 보고, 다음 단어 시작까지 화면을 유지한다. 없으면 0."""
     for i, word in enumerate(words[:_MAX_OPENING_WORDS]):
         if OPENING_ANCHOR in _NON_HANGUL_RE.sub("", word.text):
             nxt = words[i + 1].start if i + 1 < len(words) else word.end

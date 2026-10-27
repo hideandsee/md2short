@@ -122,7 +122,7 @@
 | `md2short.qc` | transcript tail/render-audio QC + flexible duration metadata + 비용 추정 |
 | `md2short.timeutil` | `ms_to_frames`/`frames_to_ms` — ms↔frame 변환의 유일한 위치 (정수 half-up) |
 | `md2short.edl` | caption segment·cue → `edit/edl.json`(EDL), EDL → Remotion `props.json` 파생 |
-| `md2short.opening` | 날짜 오프닝 문구, `words.json`에서 오프닝 구간(`데이브리핑` 단어까지) 탐색 |
+| `md2short.opening` | 날짜 오프닝 문구, `words.json`에서 오프닝 구간(`타이거살구브리핑` 단어까지) 탐색 |
 | `md2short.company_logo` | `company/<회사명>.png` 파일명이 발화된 단어 시점에 로고 cue 생성 |
 | `md2short.jobs` / `md2short.jobops` | job ID·디렉터리 생성 / `status`·`clean` 명령 구현 |
 | `md2short.schema_export` | `RemotionProps` JSON Schema 출력 → `scripts/gen_types.sh`가 `remotion/src/generated/props.ts` 생성 |
@@ -135,7 +135,7 @@
 | --- | --- |
 | `Root.tsx` | 1080×1920, 30fps, default props, `calculateMetadata`로 duration override |
 | `TechExplainer.tsx` | 전체 합성 루트: Background + Audio + VisualLayer + NumberCards + Header + BottomBar + Captions + OpeningBriefing/Outro. `showOpening` props 로 opening visual/caption suppression 계약을 동기화하고, `showOutro`는 기본 비활성화 |
-| `BrandHeader.tsx` | 상단 400px 검은 띠 = safe margin 250px + logo 150px. props `headerLogo`가 `null`이면(`img/header_logo.png` 없음) 텍스트 워드마크 "데이브리핑"으로 대체하고, 오프닝 박스가 보이는 동안(`openingDurationFrames`)에는 워드마크를 숨겨 중복을 피함 |
+| `BrandHeader.tsx` | 상단 400px 검은 띠 = safe margin 250px + logo 150px. props `headerLogo`가 `null`이면(`img/header_logo.png` 없음) 텍스트 워드마크 "타이거살구브리핑"으로 대체하고, 오프닝 박스가 보이는 동안(`openingDurationFrames`)에는 워드마크를 숨겨 중복을 피함 |
 | `Fonts.tsx` | `@remotion/fonts` `loadFont`(내부 `delayRender`)로 `public/font/{regular,bold}{,-latin}.woff2`를 로드해 폰트 로드 전 프레임을 찍지 않음 |
 | `CompanyLogos.tsx` | `companyLogoCues` 표시 |
 | `generated/props.ts` | Python `RemotionProps`에서 생성된 타입(수정 금지, `scripts/gen_types.sh`로 재생성) |
@@ -286,7 +286,7 @@ class JobConfig(BaseModel):
   "companyLogoCues": [],
   "numberCards": [],
   "highlightKeywords": [],
-  "openingText": "26년 5월 2일\n데이브리핑",
+  "openingText": "26년 5월 2일\n타이거살구브리핑",
   "openingSubtitle": "S&P 500 ▲1.2% · 반도체 ▲3.5%",
   "openingDurationMs": 2800,
   "showOpening": true,
@@ -491,8 +491,8 @@ npx remotion render src/index.ts TechExplainer <output_path> \
 ### 5.10 [F-11] Opening / Outro CTA 계약 동기화
 
 - `JobConfig.show_opening`은 script generation, Remotion props, caption suppression, `OpeningBriefing` 호출을 함께 제어함. `show_outro`는 마지막 `Outro` overlay 표시 여부만 제어함.
-- `show_opening=True`이면 spoken opening 문구를 TTS 대본 앞에 붙이고, `openingText`에는 2줄 opening visual 문구(`26년 M월 D일\n데이브리핑`)를 전달함. 날짜는 원문 front matter `date:` 또는 앞 8줄의 날짜(YYYY-MM-DD, YYYY.MM.DD, YYYY년 M월 D일)를 우선하고, 없으면 실행일(`status.json`의 `briefing_date`에 기록).
-- `openingDurationMs`는 `words.json`에서 `데이브리핑` 단어 다음 단어의 시작까지(첫 자막과 사이 빈 화면 없음). 하단 자막은 해당 구간의 단어를 caption 대상에서 제외함.
+- `show_opening=True`이면 spoken opening 문구를 TTS 대본 앞에 붙이고, `openingText`에는 2줄 opening visual 문구(`26년 M월 D일\n타이거살구브리핑`)를 전달함. 날짜는 원문 front matter `date:` 또는 앞 8줄의 날짜(YYYY-MM-DD, YYYY.MM.DD, YYYY년 M월 D일)를 우선하고, 없으면 실행일(`status.json`의 `briefing_date`에 기록).
+- `openingDurationMs`는 `words.json`에서 `타이거살구브리핑` 단어 다음 단어의 시작까지(첫 자막과 사이 빈 화면 없음). 하단 자막은 해당 구간의 단어를 caption 대상에서 제외함.
 - `openingSubtitle`: 오프닝 박스 아래 hook 한 줄. 앞쪽 숫자 카드 2개를 `라벨 ▲수치 · 라벨 ▼수치`로 요약하고, 카드가 없으면 OpenAI 대본의 `hook`.
 - `show_opening=False`이면 opening 문구를 대본에 붙이지 않고 Remotion caption suppression도 0ms 로 전달함.
 - `show_outro=False`가 기본값이므로 마지막 2.6s full-screen `🐯 구독 + 알람` overlay는 표시하지 않음. `show_outro=True`를 명시적으로 전달한 경우에만 `Outro` overlay가 표시됨.

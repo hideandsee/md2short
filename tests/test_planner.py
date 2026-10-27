@@ -24,12 +24,12 @@ from .conftest import ROOT
 EMOTICON_DIR = ROOT / "emoticon"
 
 SCRIPT = (
-    "10월 26일 데이브리핑입니다. S&P 500 지수가 1.2% 오른 5,830포인트로 마감했다. "
+    "10월 26일 타이거살구브리핑입니다. S&P 500 지수가 1.2% 오른 5,830포인트로 마감했다. "
     "반도체 업종 지수는 3.5% 급등했다. 코스피는 외국인 순매수 1조 2천억 원에 힘입어 0.9% 올랐다."
 )
 # Scribe 발음형 전사(약어·숫자 일부가 한글로 나옴)
 SCRIBE_WORDS = [
-    "10월", "26일", "데이브리핑입니다.", "에센피", "오백", "지수가", "일점이", "퍼센트", "오른", "오천팔백삼십포인트로",
+    "10월", "26일", "타이거살구브리핑입니다.", "에센피", "오백", "지수가", "일점이", "퍼센트", "오른", "오천팔백삼십포인트로",
     "마감했다.", "반도체", "업종", "지수는", "3.5%", "급등했다.", "코스피는", "외국인", "순매수", "1조", "2천억",
     "원에", "힘입어", "0.9%", "올랐다.",
 ]
@@ -245,3 +245,26 @@ def test_card_label_when_sp500_is_split_into_words():
     words = _words(["S&P", "500", "지수가", "1.2%", "올랐다."], step=1000)
     cards, _ = plan_number_cards(words, "S&P 500 지수가 1.2% 올랐다.", audio_duration_ms=6000)
     assert [(c.label, c.text) for c in cards][0] == ("S&P 500", "1.2%")
+
+
+def test_split_prefers_phrase_boundary():
+    from md2short.script import fallback_extract
+
+    text = fallback_extract((ROOT / "samples" / "briefing.md").read_text(encoding="utf-8"))
+    segments = build_caption_segments(_words(text.split()), chunk_size=24)
+    texts = [s.text for s in segments]
+    assert not any(t.endswith(("데이터센터", "수요")) for t in texts), texts
+
+
+def test_exchange_rate_drop_does_not_get_crying_tiger():
+    words = _words("원·달러 환율은 1,372원으로 5원 하락했다.".split())
+    cues = plan_cues(build_caption_segments(words, chunk_size=14), audio_duration_ms=5000, emoticon_dir=EMOTICON_DIR)
+    assert all("04_나도울고싶어" not in c.emoticon_file_name and "15_존버" not in c.emoticon_file_name for c in cues)
+
+
+def test_generic_images_rotate_across_the_video():
+    sentences = ["코스피가 올랐다."] * 1 + ["코스닥이 올랐다.", "다우가 올랐다.", "나스닥이 올랐다.", "항셍이 올랐다."]
+    words = _words(" ".join(sentences).split())
+    cues = plan_cues(build_caption_segments(words, chunk_size=14), audio_duration_ms=9000, emoticon_dir=EMOTICON_DIR)
+    files = [c.emoticon_file_name for c in cues]
+    assert len(set(files)) >= 3, files

@@ -88,7 +88,7 @@ def storyboard_md(tmp_path):
 
 
 def test_pipeline_storyboard_branch(mock_apis, runtime, storyboard_md, tmp_path):
-    opening_words = [("10월", 0.0, 0.3), ("26일", 0.32, 0.6), ("데이브리핑입니다.", 0.62, 1.4)]
+    opening_words = [("10월", 0.0, 0.3), ("26일", 0.32, 0.6), ("타이거살구브리핑입니다.", 0.62, 1.4)]
     body = [(t, 1.5 + i * 0.4, 1.5 + i * 0.4 + 0.35) for i, t in enumerate(SCRIBE_TEXT.split())]
     mock_apis.post(ELEVENLABS_STT_URL).mock(return_value=httpx.Response(200, json=scribe_payload(opening_words + body)))
     audio_ms = int((body[-1][2] + 0.3) * 1000)

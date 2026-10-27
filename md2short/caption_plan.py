@@ -18,6 +18,8 @@ GAP_BOUNDARY_MS = 600
 MAX_CAPTION_CHARS = 26
 _SOFT_BREAK = (",", "，", "、")
 _NUMBER_TAIL_RE = re.compile(r"\d[\d,.]*(?:조|억|천억|만|천)?$")
+# 어절 끝이 조사·접속어미면 구가 닫힌 곳이라 자막을 끊기 좋다('발표될'·'데이터센터'처럼 뒤 말을 꾸미는 어절은 피함)
+_PHRASE_END_RE = re.compile(r"(?:[이가은는을를에의와과도로만]|에서|으로|까지|부터|에게|고|며|서|면|지만|다)[.,!?]?$")
 _UNIT_HEAD_RE = re.compile(r"^(?:\d|원|달러|억|조|만|천|%|포인트|퍼센트)")
 
 
@@ -48,6 +50,8 @@ def split_long_range(words: list[Word], a: int, b: int, max_chars: int = MAX_CAP
         if left > max_chars and best_cut is not None:
             break
         cost = abs(left - target) - (target * 0.35 if words[cut - 1].text.endswith(_SOFT_BREAK) else 0)
+        if not _PHRASE_END_RE.search(words[cut - 1].text):
+            cost += target * 0.3  # 구 중간에서 끊지 않음
         if not words[cut - 1].text:  # 비운 단어 뒤에서 끊으면 원문 표기(S&P 500 등)가 갈라짐
             cost += total
         if _NUMBER_TAIL_RE.search(words[cut - 1].text) and _UNIT_HEAD_RE.match(words[cut].text):

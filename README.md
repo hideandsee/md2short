@@ -64,7 +64,7 @@ uv run md2short --help
 
 | 경로 | 없을 때 |
 | --- | --- |
-| `img/header_logo.png` | 헤더에 텍스트 워드마크 "데이브리핑" |
+| `img/header_logo.png` | 헤더에 텍스트 워드마크 "타이거살구브리핑" |
 | `company/<회사명>.png` | 회사 로고 cue 생략 (있으면 발화 시점에 표시) |
 | `fonts/SeoulNotice-Regular.woff2`, `fonts/SeoulAlrim-Bold.woff2` | Noto Sans KR 사용 |
 

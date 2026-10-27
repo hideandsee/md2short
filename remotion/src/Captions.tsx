@@ -42,6 +42,7 @@ export const Captions: React.FC<{ segments: CaptionSegment[] }> = ({ segments })
           WebkitBoxOrient: "vertical",
           overflow: "hidden",
           wordBreak: "keep-all",
+          textWrap: "balance", // 2줄로 나뉠 때 한 단어만 둘째 줄에 남지 않게 줄 길이를 맞춤
         }}
       >
         {segment.words.map((word, i) => {

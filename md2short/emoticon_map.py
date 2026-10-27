@@ -10,13 +10,15 @@
 - 방향: 이미지의 상승/하락(파일명 기준)이 문장 방향과 같아야 함. 방향 없는 문장엔 방향 있는 이미지를 쓰지 않음
 - 주장: 이미지 파일명의 사건 어휘(`CLAIM_TERMS`: 급등, 계약, 동결…)가 문장에 없으면 제외
 - 주제: 이미지의 구체 주제(반도체·유가·금리…, 증시·주가·지수 제외)가 문장에 하나도 없으면 제외
-선택: 점수(주제 키워드 가중치[방향 어휘는 0.5] + 방향 일치 1.5 + 문장에 나온 사건 어휘당 1 − 최근 3문장 재사용 1.5) → 가장 긴 키워드 → 낮은 NN.
-통과 후보가 없으면 방향별 범용 이미지 → 숫자 차트 → 중립 순서.
+선택: 점수(주제 키워드 가중치[방향 어휘는 0.5] + 방향 일치 1.5 + 문장에 나온 사건 어휘당 1 − 최근 3문장 재사용 1.5 − 영상 전체 사용 횟수당 0.75) → 가장 긴 키워드 → 낮은 NN.
+통과 후보가 없으면 방향별 범용 이미지(가장 덜 쓴 것) → 숫자 차트 → 중립 순서. 환율·물가는 방향 감정 이미지를 쓰지 않는다.
 """
 
 from __future__ import annotations
 
 import re
+from collections import Counter
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -32,9 +34,11 @@ NEUTRAL_DEFAULTS = (
 )
 NUMBER_FALLBACK = "05_분석중_차트.png"
 GENERIC_BY_DIRECTION = {
-    "up": ("09_가즈아_상승.png", "30_랠리_상승파티.png"),
+    "up": ("09_가즈아_상승.png", "30_랠리_상승파티.png", "03_굿굿_칭찬.png"),
     "down": ("04_나도울고싶어_하락.png", "15_존버중_버티기.png"),
 }
+# 하락이 호재일 수도 있는 주제(원화 강세·물가 안정): 우는 호랑이 같은 감정 이미지를 쓰지 않는다
+AMBIGUOUS_DIRECTION_TOPICS = ("환율", "물가")
 DOMAIN_TERMS = frozenset(
     {
         "유가", "원유", "급등", "급락", "상승", "하락", "폭락", "반도체", "금리", "동결", "매도", "매수",
@@ -61,6 +65,7 @@ GENERIC_TOPICS = frozenset({"증시", "주가", "지수"})
 DIRECTION_BONUS = 1.5
 CLAIM_BONUS = 1.0
 REUSE_PENALTY = 1.5
+USAGE_PENALTY = 0.75  # 영상 전체에서 이미 쓴 횟수당 감점
 RECENT_SENTENCES = 3
 
 _NAME_RE = re.compile(r"^(\d+)_(.+)\.png$")
@@ -124,6 +129,8 @@ def _allowed(entry: EmoticonEntry, text: str, direction: str | None) -> bool:
         return False
     if entry.topics and not any(t in text for t in entry.topics):
         return False  # 반도체 그림을 유가 문장에 쓰지 않음
+    if entry.direction is not None and not entry.topics and any(t in text for t in AMBIGUOUS_DIRECTION_TOPICS):
+        return False  # 환율·물가 하락을 우는 호랑이로 보여주지 않음
     return all(c in text for c in entry.claims)
 
 
@@ -132,7 +139,13 @@ def _weight(keyword: str, base: float) -> float:
     return 0.5 if direction_of(keyword) else base
 
 
-def best_match(text: str, index: list[EmoticonEntry], *, recent: frozenset[str] = frozenset()) -> Match | None:
+def best_match(
+    text: str,
+    index: list[EmoticonEntry],
+    *,
+    recent: frozenset[str] = frozenset(),
+    usage: Mapping[str, int] | None = None,
+) -> Match | None:
     """주제 키워드가 맞고 방향·주장 조건을 통과한 이미지 중 최고점. 없으면 None."""
     direction = direction_of(text)
     best: Match | None = None
@@ -148,6 +161,7 @@ def best_match(text: str, index: list[EmoticonEntry], *, recent: frozenset[str] 
         )
         if entry.file_name in recent:
             score -= REUSE_PENALTY
+        score -= USAGE_PENALTY * (usage or {}).get(entry.file_name, 0)
         longest = max((k for k, _ in hits), key=len)
         key = (score, len(longest), -entry.number)
         if best_key is None or key > best_key:
@@ -155,11 +169,12 @@ def best_match(text: str, index: list[EmoticonEntry], *, recent: frozenset[str] 
     return best
 
 
-def _pick_fallback(text: str, recent: frozenset[str], counter: int) -> str:
-    generic = GENERIC_BY_DIRECTION.get(direction_of(text) or "")
+def _pick_fallback(text: str, recent: frozenset[str], counter: int, usage: Mapping[str, int]) -> str:
+    ambiguous = any(t in text for t in AMBIGUOUS_DIRECTION_TOPICS)
+    generic = None if ambiguous else GENERIC_BY_DIRECTION.get(direction_of(text) or "")
     if generic:
-        fresh = [g for g in generic if g not in recent]
-        return (fresh or list(generic))[0]
+        fresh = [g for g in generic if g not in recent] or list(generic)
+        return min(fresh, key=lambda g: usage.get(g, 0))  # 동률이면 앞선 순서
     if _NUMBER_RE.search(text) and NUMBER_FALLBACK not in recent:
         return NUMBER_FALLBACK
     fresh = [n for n in NEUTRAL_DEFAULTS if n not in recent]
@@ -210,16 +225,18 @@ def plan_cues(
     index = build_keyword_index(emoticon_dir)
     cues: list[EmoticonCue] = []
     history: list[str] = []
+    usage: Counter[str] = Counter()
     for n, group in enumerate(sentence_groups(segments)):
         sentence = " ".join(segments[i].text for i in group)
         hint = " ".join(dict.fromkeys((hints or {}).get(segments[i].index, "") for i in group))
         # 공백 제거본도 함께 본다: Scribe가 한 단어를 쪼갠 경우(`폭 락`)에도 키워드가 잡히게.
         text = f"{hint} {sentence} | {sentence.replace(' ', '')}"
         recent = frozenset(history[-RECENT_SENTENCES:])
-        match = best_match(text, index, recent=recent)
-        file_name = match.entry.file_name if match else _pick_fallback(text, recent, n)
+        match = best_match(text, index, recent=recent, usage=usage)
+        file_name = match.entry.file_name if match else _pick_fallback(text, recent, n, usage)
         keyword = match.longest if match else None
         history.append(file_name)
+        usage[file_name] += 1
         for i in group:
             seg = segments[i]
             seg.highlight_keyword = _highlight(seg, match)
