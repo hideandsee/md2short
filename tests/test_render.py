@@ -12,7 +12,7 @@ from md2short import render
 from md2short.caption_plan import build_caption_segments
 from md2short.edl import build_edl, build_props
 from md2short.emoticon_map import plan_cues
-from md2short.schema import JobConfig, Word, WordsDoc
+from md2short.schema import ENDCARD_DURATION_MS, JobConfig, Word, WordsDoc
 
 from .conftest import ROOT
 
@@ -127,7 +127,7 @@ def test_render_fixture_without_brand_assets(tmp_path):
         info = render.get_video_info(out)
         assert (info.width, info.height) == (1080, 1920)
         assert info.fps == pytest.approx(30.0)
-        assert abs(info.duration_ms - words_doc.audio_duration_ms) <= 100
+        assert abs(info.duration_ms - (words_doc.audio_duration_ms + ENDCARD_DURATION_MS)) <= 100
         staged = json.loads((job_dir / "edit" / "props.json").read_text())
         assert staged["captionSegments"]
         assert not (ROOT / "remotion" / "public" / "company").exists()

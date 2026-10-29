@@ -10,6 +10,7 @@ import respx
 
 from md2short.pipeline import Runtime
 from md2short.render import VideoInfo
+from md2short.schema import ENDCARD_DURATION_MS
 from md2short.script_engine import OPENAI_RESPONSES_URL
 from md2short.transcript import ELEVENLABS_STT_URL
 
@@ -89,7 +90,7 @@ def runtime(tmp_path) -> Runtime:
         emoticon_dir=ROOT / "emoticon",
         preflight=lambda _dir: None,
         probe_audio_ms=lambda _p: AUDIO_MS,
-        probe_video=lambda _p: VideoInfo(width=1080, height=1920, fps=30.0, duration_ms=AUDIO_MS + 10),
+        probe_video=lambda _p: VideoInfo(width=1080, height=1920, fps=30.0, duration_ms=AUDIO_MS + ENDCARD_DURATION_MS + 10),
         renderer=fake_renderer,
         cleanup_staging=lambda _d, job_id: cleaned.append(job_id),
         today=lambda: date(2026, 10, 26),

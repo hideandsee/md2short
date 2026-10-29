@@ -146,6 +146,7 @@
 | `Emoticons.tsx` | legacy emoticon renderer 파일. 신규 합성 루트는 `VisualLayer.tsx` 사용 |
 | `NumberCard.tsx` | 숫자 sticker card 1.8s pop-in + tilt. 라벨(지표명) + ▲빨강/▼파랑 방향 표시. 이미지 상단 문구를 가리지 않게 콘텐츠 영역 하단 오른쪽에 배치 |
 | `OpeningBriefing.tsx` | `showOpening`이 true일 때 날짜 박스 + 아래 hook 한 줄(`openingSubtitle`) 표시. 첫 프레임(썸네일)부터 보이도록 85% 크기에서 시작 |
+| `EndCard.tsx` | `showEndcard`가 true일 때 마지막 `endcardDurationFrames`(3s) 동안 투자 면책 고지를 전체 화면으로 표시(headerLogo 포함, `showOutro`면 CTA 한 줄 추가). 내레이션 뒤에 붙는 구간이라 `durationInFrames`에 포함됨 |
 | `Outro.tsx` | `showOutro`가 true일 때만 마지막 2.6s full-screen 구독 CTA overlay 표시. 기본값은 false |
 | `layout.ts` | 화면 레이아웃 상수(헤더 400px, 하단 420px, 콘텐츠 1100px, 상승/하락 색) |
 
@@ -223,7 +224,8 @@ Job ID는 `sf_<YYYYMMDD>_<6 hex>` 형식이다. 예: `sf_20260502_abc123`. 모�
     "engine": "remotion",
     "visual_mode": "emoticon",
     "show_opening": true,
-    "show_outro": false
+    "show_outro": false,
+    "show_endcard": true
   },
   "started_at": "2026-05-02T00:00:00+00:00",
   "markdown_input": "/abs/path/sample.md",
@@ -254,6 +256,7 @@ class JobConfig(BaseModel):
     visual_mode: Literal["emoticon", "photo"] = "emoticon"  # photo 는 OPENAI_API_KEY 필요
     show_opening: bool = True
     show_outro: bool = False
+    show_endcard: bool = True
 ```
 
 `DEFAULT_VOICES`/`CTA_TEXT`/`SCRIBE_LANG` 모두 ko 단일 키만 노출 (v1.1 락). 다국어 부활은 v2 범위 — `script_engine.SYSTEM_PROMPT`, opening 템플릿, voice 매핑, multi-prompt 분기까지 함께 설계해야 함.
@@ -293,6 +296,9 @@ class JobConfig(BaseModel):
   "showOpening": true,
   "ctaText": "<CTA_TEXT[language]>",
   "showOutro": false,
+  "showEndcard": true,
+  "endcardText": "<DISCLAIMER_TEXT[language]>",
+  "endcardDurationFrames": 90,
   "openingDurationFrames": 84,
   "outroDurationFrames": 0,
   "headerLogo": null,
@@ -421,7 +427,7 @@ npx remotion render src/index.ts TechExplainer <output_path> \
 - `ffprobe`로 audio/final MP4 duration 측정.
 - checks:
   1. `sync_last_word_vs_audio`: audio duration vs last word end, trailing silence tolerance ±1000ms
-  2. `final_mp4_vs_audio`: final MP4 duration vs audio duration, tolerance ±100ms
+  2. `final_mp4_vs_audio`: final MP4 duration vs (audio duration + 엔드카드 길이), tolerance ±100ms. 엔드카드를 끄면(`--no-endcard`) 엔드카드 길이는 0
 - `duration_policy.source=tts_audio_duration`으로 실제 오디오 기반 길이 정책만 기록함.
 - 비용 추정:
   - ElevenLabs TTS: chars × $0.30 / 1K chars
@@ -497,6 +503,7 @@ npx remotion render src/index.ts TechExplainer <output_path> \
 - `openingDurationMs`는 `words.json`에서 `타이거살구브리핑` 단어 다음 단어의 시작까지(첫 자막과 사이 빈 화면 없음). 하단 자막은 해당 구간의 단어를 caption 대상에서 제외함.
 - `openingSubtitle`: 오프닝 박스 아래 hook 한 줄. 앞쪽 숫자 카드 2개를 `라벨 ▲수치 · 라벨 ▼수치`로 요약하고, 카드가 없으면 OpenAI 대본의 `hook`.
 - `show_opening=False`이면 opening 문구를 대본에 붙이지 않고 Remotion caption suppression도 0ms 로 전달함.
+- 면책 엔드카드: `show_endcard=True`(기본)이면 `RemotionProps.durationInFrames = 오디오 프레임 + endcardDurationFrames(3s=90)`. 문구는 `schema.DISCLAIMER_TEXT[language]`, 오디오·`words.json`·caption/cue 시각은 그대로이고 QC `final_mp4_vs_audio`만 엔드카드 길이를 더해 비교함. `showEndcard`가 켜져 있으면 `Outro` overlay는 그리지 않고 CTA를 엔드카드 안에 한 줄로 넣음.
 - `show_outro=False`가 기본값이므로 마지막 2.6s full-screen `🐯 구독 + 알람` overlay는 표시하지 않음. `show_outro=True`를 명시적으로 전달한 경우에만 `Outro` overlay가 표시됨.
 
 ### 5.11 [F-12] 결과물 경로 고정 + 잡 디버깅
@@ -536,6 +543,7 @@ uv run md2short run <markdown_file> \
 | `--model` | `gpt-5-mini` | OpenAI Responses API 대본 생성 모델 |
 | `--output`, `-o` | `output/ret.mp4` | final MP4 사본 경로. 빈 문자열이면 비활성화 |
 | `--no-opening` | off | 날짜 오프닝(대본 앞 문구 + 오프닝 화면) 끄기 (`show_opening=False`) |
+| `--no-endcard` | off(엔드카드 기본 ON) | 마지막에 투자 면책 고지 엔드카드 3s를 붙이지 않음 (`show_endcard=False`) |
 | `--outro` | off | 마지막 2.6s 구독 CTA overlay 표시 (`show_outro=True`, PRD F-11: 명시 옵션일 때만) |
 
 ### 6.2 잡 상태 조회

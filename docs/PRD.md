@@ -145,7 +145,7 @@
 | **F-08** | 실사 photo mode | 브리핑별 이미지 다양성 | `--visual-mode photo`에서 자막 segment의 핵심 키워드/주체를 중심으로 9:16 PNG를 생성한다. 예: `트럼프가 합의를 했다`는 Donald Trump를 primary subject로 삼는다. 외부 이미지 API가 차단하면 sanitised/fallback prompt 후 emoticon mode로 fallback한다. |
 | **F-09** | 호랑이 캐릭터 cue | 무료 deterministic 브랜드 시각 | 키워드/문장 span 기반으로 로컬 호랑이 PNG를 배치한다. |
 | **F-10** | 숫자·지표 강조 카드 | 경제·리서치 수치 전달 | 퍼센트, 금액, 지수, 포인트 같은 수치를 추출해 NumberCard로 표시한다. |
-| **F-11** | Opening / Outro | 반복 포맷과 CTA | 날짜 기반 오프닝을 기본 표시하고, Outro CTA는 명시 옵션일 때만 표시한다. |
+| **F-11** | Opening / Outro | 반복 포맷과 CTA | 날짜 기반 오프닝을 기본 표시하고, Outro CTA는 명시 옵션일 때만 표시한다. 내레이션이 끝난 뒤 투자 면책 고지 엔드카드(3초)를 기본으로 붙이고 `--no-endcard`로 끈다. |
 | **F-12** | 결과물 경로와 job 디버깅 | 산출물 추적 | `jobs/<job_id>/edit/final.mp4`, 기본 `output/ret.mp4`, logs, staging props를 일관된 위치에 남긴다. |
 
 ### 6.1 v2 후보 기능
@@ -198,4 +198,4 @@
 - en/ja 등 다국어를 재도입할 때 voice, prompt, Scribe, numeric/acronym normalization을 어떻게 분리할지.
 - 부분 재렌더링을 구현할 때 어떤 산출물을 재사용하고 어떤 상태 전이를 새로 둘지.
 - 생성형 비디오 도입은 어떤 비용·품질·브랜드 기준을 만족할 때 허용할지.
-- 경제·투자 콘텐츠에서 필요한 고지문, 면책 표현, 금칙어 기준은 어디까지 제품 요구로 둘지.
+- ~~경제·투자 콘텐츠 고지문~~ **결정(2026-10-29)**: 면책 고지는 기본 ON 엔드카드(내레이션 뒤 3초, 음성 없음, `--no-endcard`로 끔). 고정 문구는 `schema.DISCLAIMER_TEXT`. 금칙어(수익 보장 표현 등) 검사는 아직 제품 요구로 두지 않음(후속 결정).

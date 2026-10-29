@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from md2short.schema import (
+    DISCLAIMER_TEXT,
+    ENDCARD_DURATION_MS,
     OUTRO_DURATION_MS,
     CaptionSegment,
     CompanyLogoCue,
@@ -53,6 +55,7 @@ def build_props(
     header_logo: str | None,
     opening_image: str | None = None,
 ) -> RemotionProps:
+    endcard_frames = ms_to_frames(ENDCARD_DURATION_MS) if cfg.show_endcard else 0
     return RemotionProps(
         audio_file_name=f"{staging_prefix}/narration.mp3",
         words_file_name=f"{staging_prefix}/words.json",
@@ -71,7 +74,10 @@ def build_props(
         cta_text=cta_text,
         show_outro=cfg.show_outro,
         outro_duration_frames=ms_to_frames(OUTRO_DURATION_MS) if cfg.show_outro else 0,
+        show_endcard=cfg.show_endcard,
+        endcard_text=DISCLAIMER_TEXT[cfg.language] if cfg.show_endcard else "",
+        endcard_duration_frames=endcard_frames,
         header_logo=header_logo,
         opening_image=opening_image if cfg.show_opening else None,
-        duration_in_frames=edl.duration_in_frames,
+        duration_in_frames=edl.duration_in_frames + endcard_frames,
     )

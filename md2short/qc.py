@@ -47,15 +47,20 @@ def run_qc(
     final_mp4_duration_ms: int,
     cost: dict[str, Any],
     video: dict[str, Any] | None = None,
+    endcard_ms: int = 0,
 ) -> dict[str, Any]:
     checks = [
         _check("sync_last_word_vs_audio", last_word_end_ms, audio_duration_ms, SYNC_TAIL_TOLERANCE_MS),
-        _check("final_mp4_vs_audio", final_mp4_duration_ms, audio_duration_ms, RENDER_AUDIO_TOLERANCE_MS),
+        _check("final_mp4_vs_audio", final_mp4_duration_ms, audio_duration_ms + endcard_ms, RENDER_AUDIO_TOLERANCE_MS),
     ]
     return {
         "passed": all(c["passed"] for c in checks),
         "checks": checks,
-        "duration_policy": {"source": "tts_audio_duration", "audio_duration_ms": audio_duration_ms},
+        "duration_policy": {
+            "source": "tts_audio_duration",
+            "audio_duration_ms": audio_duration_ms,
+            "endcard_ms": endcard_ms,
+        },
         "video": video or {},
         "cost_estimate": cost,
     }

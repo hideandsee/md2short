@@ -21,6 +21,9 @@ export const defaultProps: RemotionProps = {
   outroDurationFrames: 0,
   headerLogo: null,
   openingImage: null,
+  showEndcard: false,
+  endcardText: "",
+  endcardDurationFrames: 0,
   fontFamily: "MD2ShortSans",
   durationInFrames: 30,
 };

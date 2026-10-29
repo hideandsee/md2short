@@ -302,6 +302,14 @@
       },
       "type": "array"
     },
+    "endcardDurationFrames": {
+      "default": 0,
+      "type": "integer"
+    },
+    "endcardText": {
+      "default": "",
+      "type": "string"
+    },
     "fontFamily": {
       "default": "MD2ShortSans",
       "type": "string"
@@ -360,6 +368,10 @@
       "default": 0,
       "type": "integer"
     },
+    "showEndcard": {
+      "default": false,
+      "type": "boolean"
+    },
     "showOpening": {
       "default": true,
       "type": "boolean"
@@ -390,6 +402,9 @@
     "ctaText",
     "showOutro",
     "outroDurationFrames",
+    "showEndcard",
+    "endcardText",
+    "endcardDurationFrames",
     "headerLogo",
     "openingImage",
     "fontFamily",

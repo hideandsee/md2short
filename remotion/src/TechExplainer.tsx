@@ -7,6 +7,7 @@ import { ensureFontsLoaded } from "./Fonts";
 import type { RemotionProps } from "./generated/props";
 import { CONTENT_HEIGHT, CONTENT_TOP } from "./layout";
 import { NumberCards } from "./NumberCard";
+import { EndCard } from "./EndCard";
 import { OpeningBriefing } from "./OpeningBriefing";
 import { Outro } from "./Outro";
 import { VisualLayer } from "./VisualLayer";
@@ -35,6 +36,15 @@ export const TechExplainer: React.FC<RemotionProps> = (props) => (
         durationFrames={props.openingDurationFrames}
       />
     ) : null}
-    {props.showOutro ? <Outro ctaText={props.ctaText} durationFrames={props.outroDurationFrames} /> : null}
+    {props.showEndcard ? (
+      <EndCard
+        text={props.endcardText}
+        ctaText={props.ctaText}
+        showCta={props.showOutro}
+        headerLogo={props.headerLogo}
+        durationFrames={props.endcardDurationFrames}
+      />
+    ) : null}
+    {props.showOutro && !props.showEndcard ? <Outro ctaText={props.ctaText} durationFrames={props.outroDurationFrames} /> : null}
   </AbsoluteFill>
 );

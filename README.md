@@ -53,7 +53,7 @@ uv run md2short --help
 ```
 
 주요 옵션: `--speed 0.7~1.2`, `--bg '#FFFFFF'`, `--chunk-size 1~24`, `--model gpt-5-mini`,
-`--no-opening`, `--outro`, `--output ''`(사본 비활성화). 전체 명세는 `docs/architecture.md` §6.
+`--no-opening`, `--outro`, `--no-endcard`(투자 면책 엔드카드 생략), `--output ''`(사본 비활성화). 전체 명세는 `docs/architecture.md` §6.
 
 종료 코드: `0` qc_passed, `1` 입력 오류(인자·키 누락), `2` 실행 중 예외 또는 qc_failed.
 

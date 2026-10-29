@@ -46,6 +46,7 @@ def run(
     output: str = typer.Option("output/ret.mp4", "--output", "-o", help="빈 문자열이면 사본 비활성화"),
     no_opening: bool = typer.Option(False, "--no-opening", help="날짜 오프닝 끄기"),
     outro: bool = typer.Option(False, "--outro", help="마지막 구독 CTA overlay 표시"),
+    no_endcard: bool = typer.Option(False, "--no-endcard", help="끝에 붙는 투자 면책 고지 엔드카드 생략"),
 ) -> None:
     """마크다운 1개로 숏폼 1편을 만든다."""
     from md2short.pipeline import run_job
@@ -74,6 +75,7 @@ def run(
         visual_mode=visual_mode,  # type: ignore[arg-type]
         show_opening=not no_opening,
         show_outro=outro,
+        show_endcard=not no_endcard,
         script_model=model,
     )
     output_path = Path(output) if output else None

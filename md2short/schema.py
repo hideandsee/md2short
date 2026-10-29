@@ -26,6 +26,11 @@ CTA_TEXT: dict[str, str] = {"ko": "구독과 알람 설정 부탁드립니다"}
 
 OPENING_DURATION_FALLBACK_MS = 2800
 OUTRO_DURATION_MS = 2600
+# 투자 면책 고지 엔드카드: 내레이션이 끝난 뒤에 붙는 고정 길이 시각 전용 구간(음성 없음, 타임라인 분할에는 영향 없음)
+DISCLAIMER_TEXT: dict[str, str] = {
+    "ko": "본 영상은 정보 제공을 위한 것이며\n투자 권유가 아닙니다.\n투자 판단과 그에 따른 책임은\n투자자 본인에게 있습니다."
+}
+ENDCARD_DURATION_MS = 3000
 
 
 class JobConfig(BaseModel):
@@ -40,6 +45,7 @@ class JobConfig(BaseModel):
     visual_mode: VisualMode = "emoticon"
     show_opening: bool = True
     show_outro: bool = False
+    show_endcard: bool = True
     script_model: str = "gpt-5-mini"
 
 
@@ -159,6 +165,9 @@ class RemotionProps(_Camel):
     cta_text: str = CTA_TEXT["ko"]
     show_outro: bool = False
     outro_duration_frames: int = 0
+    show_endcard: bool = False
+    endcard_text: str = ""
+    endcard_duration_frames: int = 0  # duration_in_frames에 포함된 마지막 고지 구간
     header_logo: str | None = None
     opening_image: str | None = None  # 오프닝 박스 위 호랑이 그림(없으면 생략)
     font_family: str = "MD2ShortSans"

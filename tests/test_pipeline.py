@@ -235,7 +235,7 @@ def test_run_job_happy_path_statuses_and_artifacts(mock_apis, runtime, sample_md
     assert props["openingDurationMs"] == 1500
     assert props["openingDurationFrames"] == props["captionSegments"][0]["startFrame"]  # 오프닝↔첫 자막 사이 빈 화면 없음
     assert props["openingText"] == "2026년 10월 26일\n타이거살구브리핑"
-    assert props["durationInFrames"] == 168
+    assert props["durationInFrames"] == 168 + 90  # 오디오 168프레임 + 면책 엔드카드 90프레임
     assert props["headerLogo"] is None
 
     tts_meta = json.loads((result.job_dir / "logs/tts_meta.json").read_text())
@@ -304,3 +304,23 @@ def test_only_timeutil_converts_ms_to_frames():
 
 def test_generated_files_exist():
     assert (Path(ROOT) / "remotion/src/generated/props.ts").exists()
+
+
+def test_endcard_extends_duration_and_qc_expects_it():
+    from md2short.edl import build_edl, build_props
+    from md2short.qc import run_qc
+    from md2short.schema import DISCLAIMER_TEXT, ENDCARD_DURATION_MS, JobConfig, WordsDoc
+    from md2short.timeutil import ms_to_frames
+
+    doc = WordsDoc(audio_duration_ms=10_000, text="a", words=[])
+    edl = build_edl(job_id="j", words_doc=doc, caption_segments=[], emoticon_cues=[])
+    on = build_props(edl, JobConfig(), staging_prefix="jobs/j", opening_text="", cta_text="", header_logo=None)
+    off = build_props(edl, JobConfig(show_endcard=False), staging_prefix="jobs/j", opening_text="", cta_text="", header_logo=None)
+    assert on.endcard_duration_frames == ms_to_frames(ENDCARD_DURATION_MS) == 90
+    assert on.duration_in_frames == off.duration_in_frames + 90
+    assert on.endcard_text == DISCLAIMER_TEXT["ko"] and off.endcard_text == "" and off.endcard_duration_frames == 0
+    cost = {"total_usd": 0}
+    kwargs = {"audio_duration_ms": 10_000, "last_word_end_ms": 10_000, "cost": cost}
+    assert run_qc(final_mp4_duration_ms=13_000, endcard_ms=3000, **kwargs)["passed"]
+    assert not run_qc(final_mp4_duration_ms=10_000, endcard_ms=3000, **kwargs)["passed"]
+    assert run_qc(final_mp4_duration_ms=10_000, **kwargs)["passed"]

@@ -30,7 +30,7 @@ from md2short.opening import (
 )
 from md2short.photo_engine import PhotoEngineError, plan_photo_cues
 from md2short.qc import estimate_cost, run_qc
-from md2short.schema import CTA_TEXT, JobConfig, WordsDoc
+from md2short.schema import CTA_TEXT, ENDCARD_DURATION_MS, JobConfig, WordsDoc
 from md2short.script_engine import SYSTEM_PROMPT, ScriptResult, generate_script
 from md2short.storyboard import (
     Cut,
@@ -347,6 +347,7 @@ def _run_stages(
             tts_chars=len(tts_input), audio_duration_ms=audio_ms, llm_input_chars=llm_in, llm_output_chars=llm_out
         ),
         video={"width": video.width, "height": video.height, "fps": video.fps, "duration_ms": video.duration_ms},
+        endcard_ms=ENDCARD_DURATION_MS if cfg.show_endcard else 0,
     )
     report["job_id"] = job_id
     report["script_engine"] = script.plan.get("engine")

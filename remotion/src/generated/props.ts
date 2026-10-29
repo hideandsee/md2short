@@ -9,6 +9,8 @@ export interface RemotionProps {
   ctaText: string;
   durationInFrames: number;
   emoticonCues: EmoticonCue[];
+  endcardDurationFrames: number;
+  endcardText: string;
   fontFamily: string;
   headerLogo: string | null;
   highlightKeywords: string[];
@@ -19,6 +21,7 @@ export interface RemotionProps {
   openingSubtitle: string;
   openingText: string;
   outroDurationFrames: number;
+  showEndcard: boolean;
   showOpening: boolean;
   showOutro: boolean;
   wordsFileName: string;

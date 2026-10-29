@@ -10,7 +10,7 @@ from md2short.emoticon_map import plan_cues
 from md2short.numeric_display import apply_numeric_display_overrides
 from md2short.pipeline import run_job
 from md2short.render import VideoInfo
-from md2short.schema import JobConfig, Word
+from md2short.schema import ENDCARD_DURATION_MS, JobConfig, Word
 from md2short.storyboard import is_storyboard, map_cuts_to_segments, narration_text, parse_storyboard
 from md2short.transcript import ELEVENLABS_STT_URL
 
@@ -93,7 +93,7 @@ def test_pipeline_storyboard_branch(mock_apis, runtime, storyboard_md, tmp_path)
     mock_apis.post(ELEVENLABS_STT_URL).mock(return_value=httpx.Response(200, json=scribe_payload(opening_words + body)))
     audio_ms = int((body[-1][2] + 0.3) * 1000)
     runtime.probe_audio_ms = lambda _p: audio_ms
-    runtime.probe_video = lambda _p: VideoInfo(width=1080, height=1920, fps=30.0, duration_ms=audio_ms)
+    runtime.probe_video = lambda _p: VideoInfo(width=1080, height=1920, fps=30.0, duration_ms=audio_ms + ENDCARD_DURATION_MS)
     openai_route = mock_apis.routes[0]
     result = run_job(storyboard_md, JobConfig(), elevenlabs_api_key="e", openai_api_key="o",
                      jobs_root=tmp_path / "jobs", output_path=None, runtime=runtime)
