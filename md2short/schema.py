@@ -160,6 +160,7 @@ class RemotionProps(_Camel):
     show_outro: bool = False
     outro_duration_frames: int = 0
     header_logo: str | None = None
+    opening_image: str | None = None  # 오프닝 박스 위 호랑이 그림(없으면 생략)
     font_family: str = "MD2ShortSans"
     duration_in_frames: int
 

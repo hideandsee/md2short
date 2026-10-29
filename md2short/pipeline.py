@@ -319,6 +319,7 @@ def _run_stages(
         opening_subtitle=opening_subtitle(number_cards, script.hook),
         cta_text=CTA_TEXT[cfg.language],
         header_logo=render.header_logo_path(rt.project_root),
+        opening_image=render.opening_image_path(rt.project_root),
     )
     final_mp4 = rt.renderer(
         job_id=job_id, job_dir=job_dir, props=props, words_doc=words_doc, audio_path=audio_path,

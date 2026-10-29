@@ -51,6 +51,7 @@ def build_props(
     cta_text: str,
     opening_subtitle: str = "",
     header_logo: str | None,
+    opening_image: str | None = None,
 ) -> RemotionProps:
     return RemotionProps(
         audio_file_name=f"{staging_prefix}/narration.mp3",
@@ -71,5 +72,6 @@ def build_props(
         show_outro=cfg.show_outro,
         outro_duration_frames=ms_to_frames(OUTRO_DURATION_MS) if cfg.show_outro else 0,
         header_logo=header_logo,
+        opening_image=opening_image if cfg.show_opening else None,
         duration_in_frames=edl.duration_in_frames,
     )

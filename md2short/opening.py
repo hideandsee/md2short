@@ -21,7 +21,7 @@ def spoken_opening(d: date) -> str:
 
 
 def opening_visual_text(d: date) -> str:
-    return f"{d:%y}년 {d.month}월 {d.day}일\n{OPENING_ANCHOR}"
+    return f"{d.year}년 {d.month}월 {d.day}일\n{OPENING_ANCHOR}"
 
 
 @dataclass(frozen=True)

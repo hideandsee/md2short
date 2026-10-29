@@ -109,6 +109,14 @@ def header_logo_path(project_root: Path) -> str | None:
     return "img/header_logo.png" if (project_root / "img" / "header_logo.png").is_file() else None
 
 
+OPENING_IMAGE = "emoticon/01_정독중_리포트.png"
+
+
+def opening_image_path(project_root: Path) -> str | None:
+    """props `openingImage` 값. 파일이 없으면 None → 오프닝은 박스만 표시."""
+    return OPENING_IMAGE if (project_root / OPENING_IMAGE).is_file() else None
+
+
 def _link_asset_dir(public_dir: Path, name: str, source: Path) -> None:
     target = public_dir / name
     if target.is_symlink() or target.is_file():

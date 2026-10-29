@@ -337,6 +337,17 @@
       "default": 0,
       "type": "integer"
     },
+    "openingImage": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
     "openingSubtitle": {
       "default": "",
       "type": "string"
@@ -380,6 +391,7 @@
     "showOutro",
     "outroDurationFrames",
     "headerLogo",
+    "openingImage",
     "fontFamily",
     "durationInFrames"
   ],

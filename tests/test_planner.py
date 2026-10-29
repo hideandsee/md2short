@@ -118,10 +118,10 @@ def test_unmatched_number_is_dropped_not_estimated():
 
 def test_number_card_cap_scales_with_length():
     texts = [t for i in range(1, 11) for t in (f"{i}.5%", "올랐다.")]
-    words = _words(texts, step=3000)
-    cards, dropped = plan_number_cards(words, " ".join(texts), audio_duration_ms=60_000)
-    assert len(cards) == 60_000 // MS_PER_CARD == 8
-    assert sum(d["reason"] == "max_cards" for d in dropped) == 2
+    words = _words(texts, step=1500)
+    cards, dropped = plan_number_cards(words, " ".join(texts), audio_duration_ms=30_000)
+    assert len(cards) == 30_000 // MS_PER_CARD == 6
+    assert sum(d["reason"] == "max_cards" for d in dropped) == 4
     assert [c.start_ms for c in cards] == sorted(c.start_ms for c in cards)
 
 

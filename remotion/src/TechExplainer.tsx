@@ -31,6 +31,7 @@ export const TechExplainer: React.FC<RemotionProps> = (props) => (
       <OpeningBriefing
         text={props.openingText}
         subtitle={props.openingSubtitle}
+        image={props.openingImage}
         durationFrames={props.openingDurationFrames}
       />
     ) : null}

@@ -1,10 +1,16 @@
-import { AbsoluteFill, spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, Img, spring, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { CONTENT_HEIGHT, CONTENT_TOP, FONT_FAMILY } from "./layout";
 
 // showOpening일 때 [0, openingDurationFrames) 구간에 "YY년 M월 D일\n타이거살구브리핑" 박스 + 아래 hook 한 줄.
-export const OpeningBriefing: React.FC<{ text: string; subtitle: string; durationFrames: number }> = ({
+export const OpeningBriefing: React.FC<{
+  text: string;
+  subtitle: string;
+  image: string | null;
+  durationFrames: number;
+}> = ({
   text,
   subtitle,
+  image,
   durationFrames,
 }) => {
   const frame = useCurrentFrame();
@@ -23,6 +29,12 @@ export const OpeningBriefing: React.FC<{ text: string; subtitle: string; duratio
         gap: 48,
       }}
     >
+      {image ? (
+        <Img
+          src={staticFile(image)}
+          style={{ width: 420, height: 420, objectFit: "contain", transform: `scale(${0.85 + 0.15 * pop})`, filter: "brightness(1.012)" }}
+        />
+      ) : null}
       <div
         style={{
           backgroundColor: "#111",

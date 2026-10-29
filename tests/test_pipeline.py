@@ -234,7 +234,7 @@ def test_run_job_happy_path_statuses_and_artifacts(mock_apis, runtime, sample_md
     props = json.loads((result.job_dir / "edit/props.json").read_text())
     assert props["openingDurationMs"] == 1500
     assert props["openingDurationFrames"] == props["captionSegments"][0]["startFrame"]  # 오프닝↔첫 자막 사이 빈 화면 없음
-    assert props["openingText"] == "26년 10월 26일\n타이거살구브리핑"
+    assert props["openingText"] == "2026년 10월 26일\n타이거살구브리핑"
     assert props["durationInFrames"] == 168
     assert props["headerLogo"] is None
 

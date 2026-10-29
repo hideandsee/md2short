@@ -20,6 +20,7 @@ export const defaultProps: RemotionProps = {
   showOutro: false,
   outroDurationFrames: 0,
   headerLogo: null,
+  openingImage: null,
   fontFamily: "MD2ShortSans",
   durationInFrames: 30,
 };

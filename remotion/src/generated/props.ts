@@ -15,6 +15,7 @@ export interface RemotionProps {
   numberCards: NumberCard[];
   openingDurationFrames: number;
   openingDurationMs: number;
+  openingImage: string | null;
   openingSubtitle: string;
   openingText: string;
   outroDurationFrames: number;

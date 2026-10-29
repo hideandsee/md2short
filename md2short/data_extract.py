@@ -16,7 +16,7 @@ from md2short.emoticon_map import direction_of
 from md2short.schema import NumberCard, Word
 from md2short.timeutil import ms_to_frames
 
-MS_PER_CARD = 7000  # 카드 상한 = 오디오 길이 / 7초
+MS_PER_CARD = 5000  # 카드 상한 = 오디오 길이 / 5초
 MIN_CARDS = 2
 COOLDOWN_MS = 2500
 CARD_DURATION_MS = 1800

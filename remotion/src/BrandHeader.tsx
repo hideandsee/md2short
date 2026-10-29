@@ -24,7 +24,7 @@ export const BrandHeader: React.FC<{ headerLogo: string | null; hideWordmarkUnti
         }}
       >
         {headerLogo ? (
-          <Img src={staticFile(headerLogo)} style={{ maxHeight: HEADER_LOGO_HEIGHT - 30, maxWidth: 900 }} />
+          <Img src={staticFile(headerLogo)} style={{ maxHeight: HEADER_LOGO_HEIGHT - 10, maxWidth: 900 }} />
         ) : showWordmark ? (
           <div style={{ color: "#fff", fontFamily: FONT_FAMILY, fontWeight: 700, fontSize: 80, letterSpacing: 4 }}>
             타이거살구브리핑
